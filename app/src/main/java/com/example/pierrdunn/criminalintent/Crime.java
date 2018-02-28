@@ -2,6 +2,7 @@ package com.example.pierrdunn.criminalintent;
 
 import java.util.Date;
 import java.util.UUID;
+import java.util.Random;
 
 /**
  * Created by pierrdunn on 24.02.18.
@@ -12,6 +13,7 @@ public class Crime {
     private String mTitle;
     private Date mDate;
     private boolean mSolved;
+    private boolean mRequiresPolice;
 
     public Crime(){
         mId = UUID.randomUUID();

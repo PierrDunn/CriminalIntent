@@ -1,16 +1,20 @@
 package com.example.pierrdunn.criminalintent;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.os.Debug;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
+import android.text.format.DateFormat;
 
 import java.util.List;
 
@@ -20,8 +24,14 @@ import java.util.List;
 
 public class CrimeListFragment extends Fragment{
 
+    private static final int REQUEST_CRIME = 1;
+
     private RecyclerView mCrimeRecycleView;
     private CrimeAdapter mAdapter;
+
+    //Save position
+    private static final String KEY_POSITION = "position";
+    private int mPosition;
 
     @Nullable
     @Override
@@ -35,9 +45,25 @@ public class CrimeListFragment extends Fragment{
         //LayoutManager размещает элементы в вертикальном списке
         mCrimeRecycleView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
+        if(savedInstanceState != null)
+            mPosition = savedInstanceState.getInt(KEY_POSITION, 0);
+
         updateUI();
 
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        updateUI();
+    }
+
+    //Переопределение метода для сохранения ключа между орентациями
+    @Override
+    public void onSaveInstanceState(Bundle saveInstanceState) {
+        super.onSaveInstanceState(saveInstanceState);
+        saveInstanceState.putInt(KEY_POSITION, mPosition);
     }
 
     //Метод, настраивающий пользовательский интерфейс CrimeListFragment
@@ -45,8 +71,14 @@ public class CrimeListFragment extends Fragment{
         CrimeLab crimeLab = CrimeLab.get(getActivity());
         List<Crime> crimes = crimeLab.getCrimes();
 
-        mAdapter = new CrimeAdapter(crimes);
-        mCrimeRecycleView.setAdapter(mAdapter);
+        if (mAdapter == null) {
+            mAdapter = new CrimeAdapter(crimes);
+            mCrimeRecycleView.setAdapter(mAdapter);
+        } else {
+            //mAdapter.notifyDataSetChanged();
+            //Перезагрузка одного элемента
+            mAdapter.notifyItemChanged(mPosition);
+        }
     }
 
     //ViewHolder заполняет макет списка
@@ -55,6 +87,7 @@ public class CrimeListFragment extends Fragment{
 
         private TextView mTitleTextView;
         private TextView mDateTextView;
+        private ImageView mSolvedImageView;
 
         private Crime mCrime;
 
@@ -66,20 +99,32 @@ public class CrimeListFragment extends Fragment{
 
             mTitleTextView = (TextView) itemView.findViewById(R.id.crime_title);
             mDateTextView = (TextView) itemView.findViewById(R.id.crime_date);
+            mSolvedImageView = (ImageView) itemView.findViewById(R.id.crime_solved);
         }
 
         public void bind(Crime crime){
             mCrime = crime;
             mTitleTextView.setText(mCrime.getTitle());
-            mDateTextView.setText(mCrime.getDate().toString());
+            mDateTextView.setText(DateFormat.format("dd, MM, yyyy hh:mm:ss a",mCrime.getDate()));
+            mSolvedImageView.setVisibility(mCrime.isSolved() ? View.VISIBLE :
+            View.INVISIBLE);
         }
 
         //переопределение слушателя касания
         @Override
         public void onClick(View v) {
-            Toast.makeText(getActivity(),
-                    mCrime.getTitle() + "clicked!", Toast.LENGTH_SHORT)
-                    .show();
+            mPosition = getAdapterPosition();
+            Intent intent = CrimeActivity.newIntent(getActivity(), mCrime.getId());
+            startActivity(intent);
+            Log.v("POSITION: ", Integer.toString(mPosition));
+        }
+    }
+
+    //Возвращение результата активности-хосту
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if(requestCode == REQUEST_CRIME){
+            //Обработка результата
         }
     }
 
@@ -110,5 +155,6 @@ public class CrimeListFragment extends Fragment{
         public int getItemCount() {
             return mCrimes.size();
         }
+
     }
 }
