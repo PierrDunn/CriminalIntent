@@ -8,4 +8,10 @@
     <string name="crime_solved_label">Solved</string>
     <string name="data_picker_title">Date of crime:</string>
 
+    <!-- Menu -->
+    <string name="show_subtitle">Show crimes</string>
+    <string name="hide_subtitle"></string>
+    <string name="new_crime">New crime</string>
+    <string name="subtitle_format">%1$d crimes</string>
+
 </resources>

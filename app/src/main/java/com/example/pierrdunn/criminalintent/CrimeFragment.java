@@ -66,6 +66,14 @@ public class CrimeFragment extends Fragment {
         //mPosition = (Integer) getArguments().getSerializable(ARG_POSITION);
     }
 
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        CrimeLab.get(getActivity())
+                .updateCrime(mCrime);
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {

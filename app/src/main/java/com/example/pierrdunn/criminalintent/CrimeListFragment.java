@@ -6,10 +6,14 @@ import android.os.Debug;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -24,14 +28,26 @@ import java.util.List;
 
 public class CrimeListFragment extends Fragment{
 
+    private static final String SAVED_SUBTITLE_VISIBLE = "subtitle";
+
     private static final int REQUEST_CRIME = 1;
 
     private RecyclerView mCrimeRecycleView;
     private CrimeAdapter mAdapter;
+    private boolean mSubtitleVisible;
 
     //Save position
     private static final String KEY_POSITION = "position";
     private int mPosition;
+
+    //Для меню
+    //Сообщаем FragmentManager, что экземпляр CrimeListFragment
+    //должен получать обратные вызовы меню
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+    }
 
     @Nullable
     @Override
@@ -45,8 +61,11 @@ public class CrimeListFragment extends Fragment{
         //LayoutManager размещает элементы в вертикальном списке
         mCrimeRecycleView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
-        if(savedInstanceState != null)
+        if(savedInstanceState != null) {
             mPosition = savedInstanceState.getInt(KEY_POSITION, 0);
+            mSubtitleVisible = savedInstanceState
+                    .getBoolean(SAVED_SUBTITLE_VISIBLE,false);
+        }
 
         updateUI();
 
@@ -59,11 +78,61 @@ public class CrimeListFragment extends Fragment{
         updateUI();
     }
 
+    //Меню ActionBar
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.fragment_crime_list, menu);
+
+        MenuItem subtitleitem = menu.findItem(R.id.show_subtitle);
+        if(mSubtitleVisible)
+            subtitleitem.setTitle(R.string.hide_subtitle);
+        else
+            subtitleitem.setTitle(R.string.show_subtitle);
+    }
+
+    //Реакция на выбор команды меню
+
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()){
+            case R.id.new_crime:
+                Crime crime = new Crime();
+                CrimeLab.get(getActivity()).addCrime(crime);
+                Intent intent = CrimePageActivity
+                        .newIntent(getActivity(), crime.getId());
+                startActivity(intent);
+                return true;
+            case R.id.show_subtitle:
+                mSubtitleVisible = !mSubtitleVisible;
+                getActivity().invalidateOptionsMenu();
+                updateSubtitle();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    //Метод задает подзаголовок кол-ва преступлений на панели инструментов
+    private void updateSubtitle(){
+        CrimeLab crimeLab = CrimeLab.get(getActivity());
+        int crimeCount = crimeLab.getCrimes().size();
+        String subtitle = getString(R.string.subtitle_format, crimeCount);
+
+        if(!mSubtitleVisible)
+            subtitle = null;
+
+        AppCompatActivity activity = (AppCompatActivity) getActivity();
+        activity.getSupportActionBar().setSubtitle(subtitle);
+    }
+
     //Переопределение метода для сохранения ключа между орентациями
     @Override
     public void onSaveInstanceState(Bundle saveInstanceState) {
         super.onSaveInstanceState(saveInstanceState);
         saveInstanceState.putInt(KEY_POSITION, mPosition);
+        saveInstanceState.putBoolean(SAVED_SUBTITLE_VISIBLE, mSubtitleVisible);
     }
 
     //Метод, настраивающий пользовательский интерфейс CrimeListFragment
@@ -75,10 +144,13 @@ public class CrimeListFragment extends Fragment{
             mAdapter = new CrimeAdapter(crimes);
             mCrimeRecycleView.setAdapter(mAdapter);
         } else {
+            mAdapter.setCrimes(crimes);
             mAdapter.notifyDataSetChanged();
             //Перезагрузка одного элемента
             //mAdapter.notifyItemChanged(mPosition);
         }
+
+        updateSubtitle();
     }
 
     //ViewHolder заполняет макет списка
@@ -155,6 +227,10 @@ public class CrimeListFragment extends Fragment{
         @Override
         public int getItemCount() {
             return mCrimes.size();
+        }
+
+        public void setCrimes(List<Crime> crimes){
+            mCrimes = crimes;
         }
 
     }

@@ -16,15 +16,20 @@ public class Crime {
     private boolean mRequiresPolice;
 
     public Crime(){
-        mId = UUID.randomUUID();
-        mDate = new Date();
+        this(UUID.randomUUID());
     }
 
+    /*
     public Crime(String mTitle, boolean mSolved){
         mId = UUID.randomUUID();
         this.mTitle = mTitle;
         mDate = new Date();
         this.mSolved = mSolved;
+    }
+    */
+    public Crime(UUID id){
+        mId = id;
+        mDate = new Date();
     }
 
     public UUID getId() {
