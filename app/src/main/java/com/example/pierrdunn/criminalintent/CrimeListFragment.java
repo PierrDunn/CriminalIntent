@@ -75,9 +75,9 @@ public class CrimeListFragment extends Fragment{
             mAdapter = new CrimeAdapter(crimes);
             mCrimeRecycleView.setAdapter(mAdapter);
         } else {
-            //mAdapter.notifyDataSetChanged();
+            mAdapter.notifyDataSetChanged();
             //Перезагрузка одного элемента
-            mAdapter.notifyItemChanged(mPosition);
+            //mAdapter.notifyItemChanged(mPosition);
         }
     }
 
@@ -114,7 +114,8 @@ public class CrimeListFragment extends Fragment{
         @Override
         public void onClick(View v) {
             mPosition = getAdapterPosition();
-            Intent intent = CrimeActivity.newIntent(getActivity(), mCrime.getId());
+            //Intent intent = CrimeActivity.newIntent(getActivity(), mCrime.getId());
+            Intent intent = CrimePageActivity.newIntent(getActivity(), mCrime.getId());
             startActivity(intent);
             Log.v("POSITION: ", Integer.toString(mPosition));
         }
